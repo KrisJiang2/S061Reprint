@@ -35,7 +35,7 @@ class RefundServiceTest {
     void setUp() {
         openMocks(this);
         reFundService = new ReFundService(remitBankService,s061Repository);
-    }  
+    }
 
     @Test
     void 假如我要取得退匯交易檔資料_取得退匯交易檔_成功() throws Exception {
