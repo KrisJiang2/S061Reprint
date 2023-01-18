@@ -1,0 +1,66 @@
+package tw.com.firstbank.fcbcore.fir.service.example.application.in.ReFund;
+
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+import tw.com.firstbank.fcbcore.fcbframework.core.application.exception.BusinessException;
+import tw.com.firstbank.fcbcore.fir.service.example.application.in.ReFund.api.GetReFundResponseCommand;
+import tw.com.firstbank.fcbcore.fir.service.example.application.out.repository.RefundRepository;
+import tw.com.firstbank.fcbcore.fir.service.example.application.out.remitBank.GetRemitBankOuterRequest;
+import tw.com.firstbank.fcbcore.fir.service.example.application.out.remitBank.GetRemitBankOuterResponse;
+import tw.com.firstbank.fcbcore.fir.service.example.application.out.remitBank.RemitBankServiceApi;
+import tw.com.firstbank.fcbcore.fir.service.example.domain.reFund.ReFund;
+
+import java.util.Optional;
+
+@Service
+@AllArgsConstructor
+public class ReFundService {
+
+    private final RemitBankServiceApi remitBankService;
+    private final RefundRepository s061Repository;
+
+    /** returnCode ="9998" 等於無資料
+     *
+     * @param seqNo
+     * @param advBranch
+     * @return
+     */
+    public GetReFundResponseCommand getReFund(Integer seqNo, String advBranch) {
+        GetReFundResponseCommand responseCommand = new GetReFundResponseCommand();
+        try {
+
+            Optional<ReFund> reFundData = s061Repository.getReFund(seqNo, advBranch);
+            if (!reFundData.isPresent()) {
+                responseCommand.setReturnCode("9998");
+                responseCommand.setReturnMsg("查無資料");
+            }
+            else{
+                responseCommand.setReturnCode("0000");
+                responseCommand.setReturnMsg("查詢成功");
+                responseCommand.setReFund(reFundData.get());
+            }
+        } catch (Exception e) {
+            throw new BusinessException("9999", "查詢失敗");
+        }
+
+        // ent to dto
+        return responseCommand;
+    }
+
+    public GetRemitBankOuterResponse getRemitBank(GetRemitBankOuterRequest outerRequest){
+
+        GetRemitBankOuterResponse outerResponse = null;
+        try {
+            outerResponse = remitBankService.getRemitBank(outerRequest);
+            if(!outerResponse.getReturnCode().equals("0000")) {
+                outerResponse.setDpName("*");
+                outerResponse.setSwiftTid("");
+                outerResponse.setNameAddr1("*");
+                outerResponse.setNameAddr2("*");
+            }
+        } catch (Exception e) {
+            throw new BusinessException("9999", "查詢失敗");
+        }
+        return outerResponse;
+    }
+}
